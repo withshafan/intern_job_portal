@@ -5,9 +5,7 @@ import '../services/task_service.dart';
 import '../services/user_service.dart';
 import '../providers/auth_provider.dart' as app_auth;
 import '../theme/app_theme.dart';
-import '../models/task.dart';
-import '../widgets/task_card.dart';
-import 'task_detail_screen.dart';
+
 
 class CreateTaskScreen extends StatefulWidget {
   const CreateTaskScreen({super.key});
@@ -109,7 +107,9 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
     } catch (e) {
       _showError('Failed to create task: $e');
     }
-    setState(() => _loading = false);
+    if (mounted) {
+      setState(() => _loading = false);
+    }
   }
 
   void _showError(String msg) {
