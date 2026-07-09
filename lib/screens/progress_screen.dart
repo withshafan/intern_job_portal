@@ -425,7 +425,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
     return Row(
       children: [
         Container(
-            width: 12, height: 12, color: color,
+            width: 12, height: 12,
             decoration: BoxDecoration(
                 color: color, borderRadius: BorderRadius.circular(3))),
         const SizedBox(width: 6),
