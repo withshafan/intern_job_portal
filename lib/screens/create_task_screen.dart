@@ -104,7 +104,17 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                 borderRadius: BorderRadius.circular(10)),
           ),
         );
-        Navigator.pop(context);
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+        } else {
+          _titleCtrl.clear();
+          _descriptionCtrl.clear();
+          setState(() {
+            _selectedDeadline = null;
+            _assignedToId = null;
+            _assignedToName = null;
+          });
+        }
       }
     } catch (e) {
       _showError('Failed to create task: $e');
