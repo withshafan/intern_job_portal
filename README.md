@@ -12,7 +12,7 @@
 
 ## 📖 Overview
 
-**Intern Job** is a role-based task management system designed to bridge the gap between administrators/mentors and interns. Built with a focus on **UI/UX excellence**, it features a beautiful custom-designed theme, smooth micro-interactions, real-time data sync, and interactive analytics.
+**Intern Job** is a role-based task management system designed to bridge the gap between administrators/mentors and interns. Built with a focus on **UI/UX excellence**, it features a beautiful custom-designed theme, smooth micro-interactions, real-time data sync, and interactive analytics powered by advanced charting libraries.
 
 ## ✨ Key Features
 
@@ -30,9 +30,11 @@
 - **Micro-Interactions:** Staggered list animations, Hero transitions for task details, and beautifully crafted Shimmer loading effects.
 - **Typography:** Sleek and readable typography using Google Fonts (Poppins/Inter).
 
-### 📊 Interactive Analytics & Progress
-- Dynamic **Pie Charts** and **Progress Bars** (powered by `fl_chart`) to visualize task completion rates and statuses instantly.
-- Detailed statistical breakdowns per intern for admins.
+### 📊 Data Visualization with `fl_chart`
+Instead of static images, our application heavily relies on dynamic data visualization using **`fl_chart`** to provide real-time insights:
+- **Dynamic Pie Charts:** Visualize task completion rates, overall project status, and intern distributions with interactive, animated pie charts.
+- **Progress Tracking:** Administrators can monitor intern performance over time through intuitive graphical representations.
+- **Real-time Updates:** Charts automatically re-render with smooth animations whenever backend data in Firestore is updated, providing a truly reactive analytics dashboard.
 
 ### 👤 Profile & Account Management
 - Secure authentication via **Firebase Auth**.
@@ -107,14 +109,6 @@ lib/
    flutter run
    ```
 
-## 📱 Screenshots
-
-*(Add your beautiful app screenshots here)*
-<div align="center">
-  <img src="https://via.placeholder.com/250x500.png?text=Login" width="200"/>
-  <img src="https://via.placeholder.com/250x500.png?text=Dashboard" width="200"/>
-  <img src="https://via.placeholder.com/250x500.png?text=Task+Details" width="200"/>
-</div>
 
 ## 🤝 Contributing
 Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/withshafan/intern_job_portal/issues).
