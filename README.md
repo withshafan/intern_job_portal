@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/icon/app_icon.jpg" width="150" height="150" alt="Intern Job Logo" style="border-radius: 30px; box-shadow: 0px 4px 12px rgba(0,0,0,0.2);"/>
+  <img src="assets/icon/app_icon.png" width="150" height="150" alt="Intern Job Logo" style="border-radius: 30px; box-shadow: 0px 4px 12px rgba(0,0,0,0.2);"/>
   <h1>💼 Intern Job (formerly InternHub)</h1>
   <p>A modern, premium, and scalable Flutter application for streamlined intern task management, progress tracking, and seamless collaboration.</p>
 
