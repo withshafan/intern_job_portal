@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/user_service.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart'; // Added as per step 8 note
+import 'tasks_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -35,16 +36,16 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Widget> _getScreens() {
     if (_userRole == 'admin') {
       return [
-        const Center(child: Text('Admin Dashboard')),
-        const Center(child: Text('All Tasks')),
-        const Center(child: Text('Performance Reports')),
+        const Center(child: Text('Admin Dashboard (coming soon)')),
+        const TasksScreen(isAdmin: true),
+        const Center(child: Text('Performance Reports (coming soon)')),
       ];
     } else {
       // Intern
       return [
-        const Center(child: Text('My Tasks')),
-        const Center(child: Text('Create Task')),
-        const Center(child: Text('My Progress')),
+        const TasksScreen(isAdmin: false),
+        const Center(child: Text('Create Task (coming soon)')),
+        const Center(child: Text('My Progress (coming soon)')),
       ];
     }
   }
