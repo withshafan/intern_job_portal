@@ -211,6 +211,70 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         const SizedBox(height: 32),
 
+                        // ── Branding ──────────────────────────────
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 20, horizontal: 16),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppTheme.primaryIndigo.withValues(alpha: 0.08),
+                                AppTheme.primaryTeal.withValues(alpha: 0.08),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: AppTheme.primaryIndigo.withValues(alpha: 0.15),
+                              width: 1,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppTheme.primaryIndigo.withValues(alpha: 0.1),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    )
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.favorite,
+                                  color: Colors.redAccent,
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              const Text(
+                                'Made by withshafan',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.5,
+                                  color: AppTheme.primaryIndigo,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Empowering teams worldwide',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+
                         // ── Sign Out ──────────────────────────────
                         SizedBox(
                           width: double.infinity,
