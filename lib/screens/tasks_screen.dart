@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/task_service.dart';
 import '../models/task.dart';
+import 'create_task_screen.dart';
 
 class TasksScreen extends StatefulWidget {
   final bool isAdmin;
@@ -120,12 +121,12 @@ class _TasksScreenState extends State<TasksScreen> {
                         }
                       }
                     },
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
+                    itemBuilder: (context) => const [
+                      PopupMenuItem(
                         value: 'update_status',
                         child: Text('Update Status'),
                       ),
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'delete',
                         child: Text('Delete'),
                       ),
@@ -137,6 +138,19 @@ class _TasksScreenState extends State<TasksScreen> {
           );
         },
       ),
+      floatingActionButton: widget.isAdmin
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CreateTaskScreen(),
+                  ),
+                );
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 
