@@ -222,14 +222,27 @@ class AppDrawer extends StatelessWidget {
           // ── Footer ────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.work_rounded,
-                    size: 14, color: Colors.grey.shade400),
-                const SizedBox(width: 6),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.work_rounded,
+                        size: 14, color: Colors.grey.shade400),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Intern Job v1.0',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey.shade400,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
                 Text(
-                  'Intern Job v1.0',
+                  'Made by withshafan',
                   style: TextStyle(
                     fontSize: 11,
                     color: Colors.grey.shade400,
