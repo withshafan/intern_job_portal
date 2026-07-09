@@ -66,4 +66,23 @@ class TaskService {
   Future<void> deleteTask(String taskId) async {
     await _firestore.collection('tasks').doc(taskId).delete();
   }
+
+  // Get tasks for a specific user as a Future (one-time fetch)
+  Future<List<Task>> getTasksForUserFuture(String userId) async {
+    QuerySnapshot snapshot = await _firestore
+        .collection('tasks')
+        .where('assignedTo', isEqualTo: userId)
+        .get();
+    return snapshot.docs
+        .map((doc) => Task.fromMap(doc.data() as Map<String, dynamic>, doc.id))
+        .toList();
+  }
+
+  // Get all tasks as a Future (for admin)
+  Future<List<Task>> getAllTasksFuture() async {
+    QuerySnapshot snapshot = await _firestore.collection('tasks').get();
+    return snapshot.docs
+        .map((doc) => Task.fromMap(doc.data() as Map<String, dynamic>, doc.id))
+        .toList();
+  }
 }
