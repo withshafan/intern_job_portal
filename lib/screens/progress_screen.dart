@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../services/task_service.dart';
 import '../services/user_service.dart';
 import '../models/task.dart';
+import '../theme/app_theme.dart';
+import '../providers/auth_provider.dart' as app_auth;
+import 'package:provider/provider.dart';
 
 class ProgressScreen extends StatefulWidget {
   final bool isAdmin;
@@ -19,210 +23,364 @@ class _ProgressScreenState extends State<ProgressScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.isAdmin ? 'Intern Reports' : 'My Progress'),
-      ),
       body: widget.isAdmin ? _buildAdminView() : _buildInternView(),
     );
   }
 
-  // ---------- Intern View ----------
+  // ── Intern View ───────────────────────────────────────────────
   Widget _buildInternView() {
-    User? user = FirebaseAuth.instance.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
     if (user == null) return const Center(child: Text('Not logged in'));
 
     return FutureBuilder<List<Task>>(
       future: _taskService.getTasksForUserFuture(user.uid),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+      builder: (ctx, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
-        if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        }
-        List<Task> tasks = snapshot.data ?? [];
+        final tasks = snap.data ?? [];
         return _buildInternStats(tasks);
       },
     );
   }
 
   Widget _buildInternStats(List<Task> tasks) {
-    int pending = tasks.where((t) => t.status == 'pending').length;
-    int inProgress = tasks.where((t) => t.status == 'in_progress').length;
-    int completed = tasks.where((t) => t.status == 'completed').length;
-    int total = tasks.length;
+    final pending = tasks.where((t) => t.status == 'pending').length;
+    final inProgress = tasks.where((t) => t.status == 'in_progress').length;
+    final completed = tasks.where((t) => t.status == 'completed').length;
+    final total = tasks.length;
+    final completionRate =
+        total == 0 ? 0.0 : (completed / total * 100);
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Stats cards
-          Row(
-            children: [
-              _statCard('Total', total, Colors.blue),
-              _statCard('Pending', pending, Colors.orange),
-              _statCard('In Progress', inProgress, Colors.orange.shade700),
-              _statCard('Completed', completed, Colors.green),
-            ],
-          ),
-          const SizedBox(height: 20),
-          const Text(
-            'Your Tasks',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 10),
-          Expanded(
-            child: ListView.builder(
-              itemCount: tasks.length,
-              itemBuilder: (context, index) {
-                Task task = tasks[index];
-                Color statusColor;
-                switch (task.status) {
-                  case 'pending':
-                    statusColor = Colors.orange;
-                    break;
-                  case 'in_progress':
-                    statusColor = Colors.blue;
-                    break;
-                  case 'completed':
-                    statusColor = Colors.green;
-                    break;
-                  default:
-                    statusColor = Colors.grey;
-                }
-                return Card(
-                  margin: const EdgeInsets.symmetric(vertical: 4),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: statusColor,
-                      child: Text(
-                        task.status.substring(0, 1).toUpperCase(),
-                        style: const TextStyle(color: Colors.white),
-                      ),
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Stats Row ──────────────────────────────
+                Row(
+                  children: [
+                    _statCard('Total', total, AppTheme.primaryIndigo),
+                    const SizedBox(width: 10),
+                    _statCard('Done', completed, AppTheme.statusCompleted),
+                    const SizedBox(width: 10),
+                    _statCard('Overdue',
+                        tasks.where((t) => t.isOverdue).length, Colors.red),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                // ── Pie Chart ──────────────────────────────
+                if (total > 0) ...[
+                  Text('Status Breakdown',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          )),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 200,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: PieChart(
+                            PieChartData(
+                              sections: [
+                                if (pending > 0)
+                                  PieChartSectionData(
+                                    value: pending.toDouble(),
+                                    color: AppTheme.statusPending,
+                                    title: '$pending',
+                                    radius: 60,
+                                    titleStyle: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                if (inProgress > 0)
+                                  PieChartSectionData(
+                                    value: inProgress.toDouble(),
+                                    color: AppTheme.statusInProgress,
+                                    title: '$inProgress',
+                                    radius: 60,
+                                    titleStyle: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                if (completed > 0)
+                                  PieChartSectionData(
+                                    value: completed.toDouble(),
+                                    color: AppTheme.statusCompleted,
+                                    title: '$completed',
+                                    radius: 60,
+                                    titleStyle: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                              ],
+                              sectionsSpace: 3,
+                              centerSpaceRadius: 40,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _legendItem('Pending', AppTheme.statusPending, pending),
+                            const SizedBox(height: 10),
+                            _legendItem('In Progress', AppTheme.statusInProgress,
+                                inProgress),
+                            const SizedBox(height: 10),
+                            _legendItem('Completed', AppTheme.statusCompleted,
+                                completed),
+                          ],
+                        ),
+                      ],
                     ),
-                    title: Text(task.title),
-                    subtitle: Text(
-                      'Deadline: ${task.deadline.toLocal().toString().split(' ')[0]}',
-                    ),
-                    trailing: Text(task.status),
                   ),
-                );
-              },
+                  const SizedBox(height: 24),
+
+                  // ── Completion Rate ────────────────────────
+                  Text('Completion Rate',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          )),
+                  const SizedBox(height: 12),
+                  Stack(
+                    children: [
+                      Container(
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                      FractionallySizedBox(
+                        widthFactor: completionRate / 100,
+                        child: Container(
+                          height: 12,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [
+                                AppTheme.primaryIndigo,
+                                AppTheme.statusCompleted
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '${completionRate.toStringAsFixed(0)}% complete',
+                    style: TextStyle(
+                      color: Colors.grey.shade500,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+
+                // ── Task List ──────────────────────────────
+                Text('Your Tasks',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        )),
+              ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _statCard(String label, int count, Color color) {
-    return Expanded(
-      child: Card(
-        color: color.withOpacity(0.2),
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            children: [
-              Text(
-                count.toString(),
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: color),
-              ),
-              Text(label, style: const TextStyle(fontSize: 12)),
-            ],
+        ),
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (ctx, i) {
+              final task = tasks[i];
+              final color = AppTheme.statusColor(task.status);
+              return Container(
+                margin: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardTheme.color,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 8,
+                    )
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      margin: const EdgeInsets.only(right: 12),
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(task.title,
+                          style: const TextStyle(fontWeight: FontWeight.w500)),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        AppTheme.statusLabel(task.status),
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: color,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+            childCount: tasks.length,
           ),
         ),
-      ),
+      ],
     );
   }
 
-  // ---------- Admin View ----------
+  // ── Admin View ────────────────────────────────────────────────
   Widget _buildAdminView() {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: _userService.getAllUsers(),
-      builder: (context, userSnapshot) {
-        if (userSnapshot.connectionState == ConnectionState.waiting) {
+      builder: (ctx, userSnap) {
+        if (userSnap.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
-        if (userSnapshot.hasError) {
-          return Center(child: Text('Error: ${userSnapshot.error}'));
-        }
-        List<Map<String, dynamic>> allUsers = userSnapshot.data ?? [];
-        // Filter only interns
-        List<Map<String, dynamic>> interns =
-            allUsers.where((u) => u['role'] == 'intern').toList();
+        final interns = (userSnap.data ?? [])
+            .where((u) => u['role'] == 'intern')
+            .toList();
 
         if (interns.isEmpty) {
-          return const Center(child: Text('No interns found.'));
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.people_outline,
+                    size: 64, color: Colors.grey.shade300),
+                const SizedBox(height: 12),
+                Text('No interns yet',
+                    style: TextStyle(color: Colors.grey.shade400)),
+              ],
+            ),
+          );
         }
 
         return FutureBuilder<List<Task>>(
           future: _taskService.getAllTasksFuture(),
-          builder: (context, taskSnapshot) {
-            if (taskSnapshot.connectionState == ConnectionState.waiting) {
+          builder: (ctx, taskSnap) {
+            if (taskSnap.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
-            if (taskSnapshot.hasError) {
-              return Center(child: Text('Error: ${taskSnapshot.error}'));
-            }
-            List<Task> allTasks = taskSnapshot.data ?? [];
+            final allTasks = taskSnap.data ?? [];
 
-            // Build a map: internId -> task counts
-            Map<String, Map<String, int>> internStats = {};
-            for (var intern in interns) {
-              String id = intern['id'];
-              internStats[id] = {
-                'total': 0,
-                'pending': 0,
-                'in_progress': 0,
-                'completed': 0,
+            final Map<String, Map<String, int>> stats = {};
+            for (final intern in interns) {
+              final id = intern['id'] as String;
+              final tasks =
+                  allTasks.where((t) => t.assignedTo == id).toList();
+              stats[id] = {
+                'total': tasks.length,
+                'pending':
+                    tasks.where((t) => t.status == 'pending').length,
+                'in_progress':
+                    tasks.where((t) => t.status == 'in_progress').length,
+                'completed':
+                    tasks.where((t) => t.status == 'completed').length,
               };
-            }
-            for (var task in allTasks) {
-              String assignedTo = task.assignedTo;
-              if (internStats.containsKey(assignedTo)) {
-                internStats[assignedTo]!['total'] =
-                    (internStats[assignedTo]!['total'] ?? 0) + 1;
-                if (task.status == 'pending')
-                  internStats[assignedTo]!['pending'] =
-                      (internStats[assignedTo]!['pending'] ?? 0) + 1;
-                else if (task.status == 'in_progress')
-                  internStats[assignedTo]!['in_progress'] =
-                      (internStats[assignedTo]!['in_progress'] ?? 0) + 1;
-                else if (task.status == 'completed')
-                  internStats[assignedTo]!['completed'] =
-                      (internStats[assignedTo]!['completed'] ?? 0) + 1;
-              }
             }
 
             return ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               itemCount: interns.length,
-              itemBuilder: (context, index) {
-                var intern = interns[index];
-                String id = intern['id'];
-                String name = intern['name'] ?? intern['email'] ?? 'Unknown';
-                var stats = internStats[id] ?? {
-                  'total': 0,
-                  'pending': 0,
-                  'in_progress': 0,
-                  'completed': 0,
-                };
-                return Card(
-                  margin: const EdgeInsets.symmetric(vertical: 6),
+              itemBuilder: (ctx, i) {
+                final intern = interns[i];
+                final id = intern['id'] as String;
+                final name = intern['name'] ?? intern['email'] ?? 'Unknown';
+                final s = stats[id]!;
+                final total = s['total']!;
+                final done = s['completed']!;
+                final rate = total == 0 ? 0.0 : done / total;
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardTheme.color,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                      )
+                    ],
+                  ),
                   child: ExpansionTile(
-                    leading: const Icon(Icons.person),
-                    title: Text(name),
-                    subtitle: Text('Total tasks: ${stats['total']}'),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                    leading: CircleAvatar(
+                      backgroundColor:
+                          AppTheme.primaryIndigo.withOpacity(0.1),
+                      child: Text(
+                        name[0].toUpperCase(),
+                        style: const TextStyle(
+                          color: AppTheme.primaryIndigo,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    title: Text(name,
+                        style: const TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Row(
+                      children: [
+                        Text('$done/$total tasks done',
+                            style: TextStyle(
+                                fontSize: 12, color: Colors.grey.shade500)),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: rate,
+                              backgroundColor: Colors.grey.shade200,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppTheme.statusCompleted),
+                              minHeight: 6,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                     children: [
                       Padding(
-                        padding: const EdgeInsets.all(12.0),
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
-                            _statCard('Pending', stats['pending'] ?? 0, Colors.orange),
-                            _statCard('In Progress', stats['in_progress'] ?? 0, Colors.blue),
-                            _statCard('Completed', stats['completed'] ?? 0, Colors.green),
+                            _statCard(
+                                'Pending', s['pending']!, AppTheme.statusPending),
+                            const SizedBox(width: 8),
+                            _statCard('In Progress', s['in_progress']!,
+                                AppTheme.statusInProgress),
+                            const SizedBox(width: 8),
+                            _statCard('Completed', s['completed']!,
+                                AppTheme.statusCompleted),
                           ],
                         ),
                       ),
@@ -234,6 +392,45 @@ class _ProgressScreenState extends State<ProgressScreen> {
           },
         );
       },
+    );
+  }
+
+  Widget _statCard(String label, int count, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          children: [
+            Text(
+              '$count',
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: color),
+            ),
+            Text(label,
+                style: const TextStyle(fontSize: 10),
+                textAlign: TextAlign.center),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _legendItem(String label, Color color, int count) {
+    return Row(
+      children: [
+        Container(
+            width: 12, height: 12, color: color,
+            decoration: BoxDecoration(
+                color: color, borderRadius: BorderRadius.circular(3))),
+        const SizedBox(width: 6),
+        Text('$label ($count)', style: const TextStyle(fontSize: 12)),
+      ],
     );
   }
 }

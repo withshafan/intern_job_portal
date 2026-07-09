@@ -1,6 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import '../services/user_service.dart';
+import '../providers/auth_provider.dart' as app_auth;
+import '../theme/app_theme.dart';
 import 'login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -12,94 +17,258 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final UserService _userService = UserService();
-  Map<String, dynamic>? _userData;
-  bool _loading = true;
+  final ImagePicker _picker = ImagePicker();
+  bool _uploading = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadUserData();
-  }
+  Future<void> _pickAndUploadImage() async {
+    final picked = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 75,
+      maxWidth: 800,
+    );
+    if (picked == null || !mounted) return;
 
-  Future<void> _loadUserData() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      Map<String, dynamic>? data = await _userService.getCurrentUserData();
-      setState(() {
-        _userData = data;
-        _loading = false;
-      });
-    } else {
-      setState(() => _loading = false);
+    setState(() => _uploading = true);
+    final file = File(picked.path);
+    final url = await _userService.uploadProfileImage(file);
+    if (mounted) {
+      setState(() => _uploading = false);
+      if (url != null) {
+        // Refresh provider
+        await context.read<app_auth.AuthProvider>().refreshUser();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Profile picture updated ✓'),
+            backgroundColor: AppTheme.statusCompleted,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to upload image')),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<app_auth.AuthProvider>();
+    final user = authProvider.currentUser;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
-      body: _loading
+      body: user == null
           ? const Center(child: CircularProgressIndicator())
-          : _userData == null
-              ? const Center(child: Text('User data not available'))
-              : Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.blue.shade100,
-                        child: Text(
-                          (_userData?['name'] ?? 'U')[0].toUpperCase(),
-                          style: const TextStyle(fontSize: 40),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      _infoRow('Name', _userData?['name'] ?? 'Unknown'),
-                      _infoRow('Email', _userData?['email'] ?? 'Unknown'),
-                      _infoRow('Role', _userData?['role'] ?? 'Unknown'),
-                      const Spacer(),
-                      Center(
-                        child: ElevatedButton.icon(
-                          onPressed: () async {
-                            await FirebaseAuth.instance.signOut();
-                            // Navigate to login
-                            Navigator.of(context).pushAndRemoveUntil(
-                              MaterialPageRoute(
-                                builder: (context) => const LoginScreen(),
+          : SingleChildScrollView(
+              child: Column(
+                children: [
+                  // ── Header ──────────────────────────────────────
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(32),
+                    decoration: const BoxDecoration(
+                      gradient: AppTheme.primaryGradient,
+                    ),
+                    child: Column(
+                      children: [
+                        // Avatar with camera button
+                        Stack(
+                          children: [
+                            Container(
+                              width: 96,
+                              height: 96,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                    color: Colors.white, width: 3),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    blurRadius: 12,
+                                  ),
+                                ],
                               ),
-                              (route) => false,
-                            );
-                          },
-                          icon: const Icon(Icons.logout),
-                          label: const Text('Sign Out'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            foregroundColor: Colors.white,
+                              child: ClipOval(
+                                child: _uploading
+                                    ? const Center(
+                                        child: CircularProgressIndicator(
+                                            color: Colors.white))
+                                    : user.profileImageUrl != null
+                                        ? Image.network(
+                                            user.profileImageUrl!,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (_, __, ___) =>
+                                                _avatarFallback(user.name),
+                                          )
+                                        : _avatarFallback(user.name),
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: GestureDetector(
+                                onTap: _pickAndUploadImage,
+                                child: Container(
+                                  padding: const EdgeInsets.all(7),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.camera_alt,
+                                    size: 16,
+                                    color: AppTheme.primaryIndigo,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        Text(
+                          user.name,
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            user.role == 'admin' ? 'Administrator' : 'Intern',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+
+                  // ── Info Cards ───────────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Account Information',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        _infoCard(Icons.person_outline, 'Full Name', user.name),
+                        const SizedBox(height: 10),
+                        _infoCard(
+                            Icons.email_outlined, 'Email', user.email),
+                        const SizedBox(height: 10),
+                        _infoCard(
+                          user.role == 'admin'
+                              ? Icons.admin_panel_settings_outlined
+                              : Icons.school_outlined,
+                          'Role',
+                          user.role == 'admin' ? 'Administrator' : 'Intern',
+                        ),
+                        const SizedBox(height: 32),
+
+                        // ── Sign Out ──────────────────────────────
+                        SizedBox(
+                          width: double.infinity,
+                          height: 52,
+                          child: OutlinedButton.icon(
+                            onPressed: () async {
+                              await authProvider.logout();
+                              if (mounted) {
+                                Navigator.of(context).pushAndRemoveUntil(
+                                  MaterialPageRoute(
+                                      builder: (_) => const LoginScreen()),
+                                  (route) => false,
+                                );
+                              }
+                            },
+                            icon: const Icon(Icons.logout,
+                                color: Colors.red),
+                            label: const Text('Sign Out',
+                                style: TextStyle(color: Colors.red)),
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: Colors.red.shade300),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
     );
   }
 
-  Widget _infoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+  Widget _avatarFallback(String name) {
+    return Container(
+      color: Colors.white.withOpacity(0.2),
+      child: Center(
+        child: Text(
+          name.isNotEmpty ? name[0].toUpperCase() : 'U',
+          style: const TextStyle(
+              fontSize: 38,
+              fontWeight: FontWeight.w700,
+              color: Colors.white),
+        ),
+      ),
+    );
+  }
+
+  Widget _infoCard(IconData icon, String label, String value) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardTheme.color,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+          )
+        ],
+      ),
       child: Row(
         children: [
-          SizedBox(
-            width: 80,
-            child: Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryIndigo.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(8),
             ),
+            child: Icon(icon, size: 18, color: AppTheme.primaryIndigo),
           ),
-          Expanded(
-            child: Text(value),
+          const SizedBox(width: 14),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label,
+                  style: TextStyle(
+                      fontSize: 11, color: Colors.grey.shade500)),
+              const SizedBox(height: 2),
+              Text(value,
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
+            ],
           ),
         ],
       ),

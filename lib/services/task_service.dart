@@ -6,39 +6,52 @@ class TaskService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Get all tasks for a specific user (intern)
+  // ── Streams ────────────────────────────────────────────────────
+
   Stream<List<Task>> getTasksForUser(String userId) {
     return _firestore
         .collection('tasks')
         .where('assignedTo', isEqualTo: userId)
         .orderBy('deadline', descending: false)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Task.fromMap(doc.data() as Map<String, dynamic>, doc.id))
-            .toList());
+        .map((s) => s.docs.map((d) => Task.fromMap(d.data(), d.id)).toList());
   }
 
-  // Get all tasks (for admin)
   Stream<List<Task>> getAllTasks() {
     return _firestore
         .collection('tasks')
         .orderBy('deadline', descending: false)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Task.fromMap(doc.data() as Map<String, dynamic>, doc.id))
-            .toList());
+        .map((s) => s.docs.map((d) => Task.fromMap(d.data(), d.id)).toList());
   }
 
-  // Create a new task
+  // ── One-time fetches ───────────────────────────────────────────
+
+  Future<List<Task>> getTasksForUserFuture(String userId) async {
+    final snapshot = await _firestore
+        .collection('tasks')
+        .where('assignedTo', isEqualTo: userId)
+        .get();
+    return snapshot.docs.map((d) => Task.fromMap(d.data(), d.id)).toList();
+  }
+
+  Future<List<Task>> getAllTasksFuture() async {
+    final snapshot = await _firestore.collection('tasks').get();
+    return snapshot.docs.map((d) => Task.fromMap(d.data(), d.id)).toList();
+  }
+
+  // ── CRUD ───────────────────────────────────────────────────────
+
   Future<void> createTask({
     required String title,
     required String description,
     required DateTime deadline,
     required String assignedTo,
     required String assignedBy,
+    String? assignedToName,
   }) async {
-    Task newTask = Task(
-      id: '', // will be set by Firestore
+    final task = Task(
+      id: '',
       title: title,
       description: description,
       deadline: deadline,
@@ -46,43 +59,65 @@ class TaskService {
       assignedTo: assignedTo,
       assignedBy: assignedBy,
       createdAt: DateTime.now(),
+      assignedToName: assignedToName,
     );
-    await _firestore.collection('tasks').add(newTask.toMap());
+    await _firestore.collection('tasks').add(task.toMap());
   }
 
-  // Update task status
   Future<void> updateTaskStatus(String taskId, String newStatus) async {
-    await _firestore.collection('tasks').doc(taskId).update({
-      'status': newStatus,
-    });
+    await _firestore
+        .collection('tasks')
+        .doc(taskId)
+        .update({'status': newStatus});
   }
 
-  // Update entire task (optional, for admin edit)
   Future<void> updateTask(String taskId, Map<String, dynamic> data) async {
     await _firestore.collection('tasks').doc(taskId).update(data);
   }
 
-  // Delete task
   Future<void> deleteTask(String taskId) async {
+    // Also delete comments subcollection
+    final commentsRef = _firestore
+        .collection('tasks')
+        .doc(taskId)
+        .collection('comments');
+    final comments = await commentsRef.get();
+    for (final doc in comments.docs) {
+      await doc.reference.delete();
+    }
     await _firestore.collection('tasks').doc(taskId).delete();
   }
 
-  // Get tasks for a specific user as a Future (one-time fetch)
-  Future<List<Task>> getTasksForUserFuture(String userId) async {
-    QuerySnapshot snapshot = await _firestore
+  // ── Comments ───────────────────────────────────────────────────
+
+  Stream<List<TaskComment>> getComments(String taskId) {
+    return _firestore
         .collection('tasks')
-        .where('assignedTo', isEqualTo: userId)
-        .get();
-    return snapshot.docs
-        .map((doc) => Task.fromMap(doc.data() as Map<String, dynamic>, doc.id))
-        .toList();
+        .doc(taskId)
+        .collection('comments')
+        .orderBy('createdAt', descending: false)
+        .snapshots()
+        .map((s) =>
+            s.docs.map((d) => TaskComment.fromMap(d.data(), d.id)).toList());
   }
 
-  // Get all tasks as a Future (for admin)
-  Future<List<Task>> getAllTasksFuture() async {
-    QuerySnapshot snapshot = await _firestore.collection('tasks').get();
-    return snapshot.docs
-        .map((doc) => Task.fromMap(doc.data() as Map<String, dynamic>, doc.id))
-        .toList();
+  Future<void> addComment({
+    required String taskId,
+    required String text,
+    required String authorId,
+    required String authorName,
+  }) async {
+    final comment = TaskComment(
+      id: '',
+      authorId: authorId,
+      authorName: authorName,
+      text: text,
+      createdAt: DateTime.now(),
+    );
+    await _firestore
+        .collection('tasks')
+        .doc(taskId)
+        .collection('comments')
+        .add(comment.toMap());
   }
 }
