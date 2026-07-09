@@ -31,26 +31,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => _uploading = true);
     final file = File(picked.path);
     final url = await _userService.uploadProfileImage(file);
-    if (mounted) {
-      setState(() => _uploading = false);
-      if (url != null) {
-        // Refresh provider
-        await context.read<app_auth.AuthProvider>().refreshUser();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Profile picture updated ✓'),
-            backgroundColor: AppTheme.statusCompleted,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10)),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to upload image')),
-        );
-      }
+    if (!context.mounted) return;
+    setState(() => _uploading = false);
+    if (url != null) {
+      // Refresh provider
+      await context.read<app_auth.AuthProvider>().refreshUser();
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Profile picture updated ✓'),
+          backgroundColor: AppTheme.statusCompleted,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to upload image')),
+      );
     }
+
   }
 
   @override
@@ -192,13 +193,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: OutlinedButton.icon(
                             onPressed: () async {
                               await authProvider.logout();
-                              if (mounted) {
-                                Navigator.of(context).pushAndRemoveUntil(
-                                  MaterialPageRoute(
-                                      builder: (_) => const LoginScreen()),
-                                  (route) => false,
-                                );
-                              }
+                              if (!context.mounted) return;
+                              Navigator.of(context).pushAndRemoveUntil(
+                                MaterialPageRoute(
+                                    builder: (_) => const LoginScreen()),
+                                (route) => false,
+                              );
                             },
                             icon: const Icon(Icons.logout,
                                 color: Colors.red),

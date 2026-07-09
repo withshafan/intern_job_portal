@@ -478,41 +478,5 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildCreateTaskPlaceholder() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.add_circle_outline, size: 80, color: Colors.blue),
-          const SizedBox(height: 20),
-          const Text(
-            'Create a new task',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Tap the button below to get started',
-            style: TextStyle(color: Colors.grey),
-          ),
-          const SizedBox(height: 30),
-          ElevatedButton.icon(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const CreateTaskScreen(),
-                ),
-              );
-            },
-            icon: const Icon(Icons.add),
-            label: const Text('New Task'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 14),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 

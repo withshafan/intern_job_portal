@@ -16,7 +16,7 @@ class UserService {
     try {
       final doc = await _firestore.collection('users').doc(user.uid).get();
       if (doc.exists) {
-        final data = doc.data() as Map<String, dynamic>?;
+        final data = doc.data();
         return data?['role'] as String?;
       }
       return null;

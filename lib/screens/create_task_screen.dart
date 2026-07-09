@@ -227,7 +227,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                 _loadingInterns
                     ? const Center(child: CircularProgressIndicator())
                     : DropdownButtonFormField<String>(
-                        value: _assignedToId,
+                        initialValue: _assignedToId,
                         decoration: const InputDecoration(
                           labelText: 'Select Intern',
                           prefixIcon:
