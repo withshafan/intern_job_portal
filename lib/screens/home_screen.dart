@@ -78,11 +78,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<app_auth.AuthProvider>();
 
-    if (auth.status == AuthStatus.unknown) {
+    if (auth.status == app_auth.AuthStatus.unknown) {
       return const Scaffold(
           body: Center(child: CircularProgressIndicator()));
     }
-    if (auth.status == AuthStatus.unauthenticated) {
+    if (auth.status == app_auth.AuthStatus.unauthenticated) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -173,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Here's your team's overview.',
+                "Here's your team's overview.",
                 style: TextStyle(color: Colors.grey.shade500),
               ),
               const SizedBox(height: 24),
