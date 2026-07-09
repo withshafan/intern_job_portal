@@ -36,6 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       return [
         const TasksScreen(isAdmin: false),
+        const CreateTaskScreen(),
         const ProgressScreen(isAdmin: false),
         const ProfileScreen(),
       ];
@@ -64,6 +65,10 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.task_outlined),
             activeIcon: Icon(Icons.task),
             label: 'My Tasks'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.add_circle_outline),
+            activeIcon: Icon(Icons.add_circle),
+            label: 'New Task'),
         BottomNavigationBarItem(
             icon: Icon(Icons.insights_outlined),
             activeIcon: Icon(Icons.insights),
