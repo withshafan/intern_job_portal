@@ -3,6 +3,7 @@ import '../services/user_service.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart'; // Added as per step 8 note
 import 'tasks_screen.dart';
+import 'create_task_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -44,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
       // Intern
       return [
         const TasksScreen(isAdmin: false),
-        const Center(child: Text('Create Task (coming soon)')),
+        const CreateTaskScreen(),
         const Center(child: Text('My Progress (coming soon)')),
       ];
     }

@@ -43,4 +43,19 @@ class UserService {
       return null;
     }
   }
+
+  // Get all users (for admin to assign tasks)
+  Future<List<Map<String, dynamic>>> getAllUsers() async {
+    try {
+      QuerySnapshot snapshot = await _firestore.collection('users').get();
+      return snapshot.docs.map((doc) {
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        data['id'] = doc.id; // add the document ID to the map
+        return data;
+      }).toList();
+    } catch (e) {
+      print('Error fetching users: $e');
+      return [];
+    }
+  }
 }
