@@ -47,8 +47,24 @@ class TaskProvider extends ChangeNotifier {
   }
 
   void updateTasks(List<Task> tasks) {
-    _allTasks = tasks;
-    notifyListeners();
+    bool hasChanges = false;
+    if (_allTasks.length != tasks.length) {
+      hasChanges = true;
+    } else {
+      for (int i = 0; i < tasks.length; i++) {
+        if (_allTasks[i].id != tasks[i].id || 
+            _allTasks[i].status != tasks[i].status || 
+            _allTasks[i].deadline != tasks[i].deadline) {
+          hasChanges = true;
+          break;
+        }
+      }
+    }
+
+    if (hasChanges) {
+      _allTasks = tasks;
+      notifyListeners();
+    }
   }
 
   Future<void> updateStatus(String taskId, String newStatus) async {
