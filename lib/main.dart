@@ -8,6 +8,7 @@ import 'theme/app_theme.dart';
 import 'providers/auth_provider.dart' as app_auth;
 import 'providers/task_provider.dart';
 import 'services/notification_service.dart';
+import 'widgets/app_drawer.dart';
 
 // Global navigator key so NotificationService can show in-app banners
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -30,6 +31,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => app_auth.AuthProvider()),
         ChangeNotifierProvider(create: (_) => TaskProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeModeNotifier()),
       ],
       child: const MyApp(),
     ),
@@ -41,14 +43,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeMode = context.watch<ThemeModeNotifier>().mode;
     return MaterialApp(
       title: 'Intern Job',
       navigatorKey: navigatorKey,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
-      debugShowCheckedModeBanner: false,
+      themeMode: themeMode,
       home: const SplashScreen(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
