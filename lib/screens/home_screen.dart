@@ -38,7 +38,6 @@ class _HomeScreenState extends State<HomeScreen> {
         const TasksScreen(isAdmin: false),
         const CreateTaskScreen(),
         const ProgressScreen(isAdmin: false),
-        const ProfileScreen(),
       ];
     }
   }
@@ -73,10 +72,6 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.insights_outlined),
             activeIcon: Icon(Icons.insights),
             label: 'Progress'),
-        BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profile'),
       ];
     }
   }
