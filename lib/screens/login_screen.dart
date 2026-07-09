@@ -79,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       width: 56,
                       height: 56,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: const Icon(Icons.work_rounded,
@@ -99,7 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       'Sign in to your Intern Job account',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.white.withOpacity(0.85),
+                        color: Colors.white.withValues(alpha: 0.85),
                       ),
                     ),
                   ],

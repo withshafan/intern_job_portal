@@ -34,6 +34,47 @@ class AppTheme {
     end: Alignment.bottomRight,
   );
 
+  static const LinearGradient successGradient = LinearGradient(
+    colors: [Color(0xFF43A047), Color(0xFF00BCD4)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient dangerGradient = LinearGradient(
+    colors: [Color(0xFFE53935), Color(0xFFFF8F00)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  // ── Glassmorphism Helpers ─────────────────────────────────────
+  static const double glassBlur = 12.0;
+  static const Color glassOverlayLight = Color(0x1AFFFFFF);
+  static const Color glassOverlayDark = Color(0x1A000000);
+
+  static BoxDecoration glassCard({bool isDark = false}) {
+    return BoxDecoration(
+      color: isDark
+          ? const Color(0x33FFFFFF)
+          : const Color(0xCCFFFFFF),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(
+        color: isDark
+            ? const Color(0x33FFFFFF)
+            : const Color(0x66FFFFFF),
+        width: 1.5,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: isDark
+              ? const Color(0x1A000000)
+              : const Color(0x14000000),
+          blurRadius: 20,
+          offset: const Offset(0, 8),
+        ),
+      ],
+    );
+  }
+
   // ── Status color helper ───────────────────────────────────────
   static Color statusColor(String status) {
     switch (status) {
@@ -136,7 +177,7 @@ class AppTheme {
           borderSide: const BorderSide(color: Colors.red, width: 2),
         ),
         labelStyle: GoogleFonts.poppins(
-          color: Colors.grey.shade600,
+          color: const Color(0xFF757575),
           fontSize: 14,
         ),
         floatingLabelStyle: GoogleFonts.poppins(

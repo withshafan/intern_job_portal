@@ -103,7 +103,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       'Join Intern Job and start managing tasks',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.white.withOpacity(0.85),
+                        color: Colors.white.withValues(alpha: 0.85),
                       ),
                     ),
                   ],
@@ -274,7 +274,7 @@ class _SignupScreenState extends State<SignupScreen> {
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
             color: isSelected
-                ? AppTheme.primaryIndigo.withOpacity(0.1)
+                ? AppTheme.primaryIndigo.withValues(alpha: 0.1)
                 : Colors.grey.shade100,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(

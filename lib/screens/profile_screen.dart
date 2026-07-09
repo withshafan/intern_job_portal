@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../services/user_service.dart';
@@ -86,7 +86,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     color: Colors.white, width: 3),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.2),
+                                    color: Colors.black.withValues(alpha: 0.2),
                                     blurRadius: 12,
                                   ),
                                 ],
@@ -141,7 +141,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 4),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
@@ -222,7 +222,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _avatarFallback(String name) {
     return Container(
-      color: Colors.white.withOpacity(0.2),
+      color: Colors.white.withValues(alpha: 0.2),
       child: Center(
         child: Text(
           name.isNotEmpty ? name[0].toUpperCase() : 'U',
@@ -243,7 +243,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
           )
         ],
@@ -253,7 +253,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppTheme.primaryIndigo.withOpacity(0.08),
+              color: AppTheme.primaryIndigo.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, size: 18, color: AppTheme.primaryIndigo),

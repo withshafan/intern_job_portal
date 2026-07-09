@@ -9,6 +9,9 @@ import 'providers/auth_provider.dart' as app_auth;
 import 'providers/task_provider.dart';
 import 'services/notification_service.dart';
 
+// Global navigator key so NotificationService can show in-app banners
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -19,8 +22,8 @@ void main() async {
   // Register background FCM handler
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
-  // Initialize notifications
-  await NotificationService().initialize();
+  // Initialize notifications (pass key for in-app banners)
+  await NotificationService().initialize(navigatorKey);
 
   runApp(
     MultiProvider(
@@ -40,6 +43,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Intern Job',
+      navigatorKey: navigatorKey,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,

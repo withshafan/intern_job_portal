@@ -10,13 +10,9 @@ class TaskProvider extends ChangeNotifier {
   List<Task> _allTasks = [];
   String _statusFilter = 'all'; // 'all', 'pending', 'in_progress', 'completed'
   TaskSortOrder _sortOrder = TaskSortOrder.deadlineAsc;
-  bool _loading = false;
-  String? _error;
 
   String get statusFilter => _statusFilter;
   TaskSortOrder get sortOrder => _sortOrder;
-  bool get loading => _loading;
-  String? get error => _error;
 
   List<Task> get filteredTasks {
     List<Task> tasks = List.from(_allTasks);

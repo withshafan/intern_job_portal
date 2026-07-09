@@ -71,7 +71,7 @@ class _SplashScreenState extends State<SplashScreen>
                     width: 110,
                     height: 110,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(30),
                     ),
                     child: const Icon(
@@ -96,7 +96,7 @@ class _SplashScreenState extends State<SplashScreen>
                   'Manage your team with ease',
                   style: TextStyle(
                     fontSize: 15,
-                    color: Colors.white.withOpacity(0.85),
+                    color: Colors.white.withValues(alpha: 0.85),
                     fontWeight: FontWeight.w400,
                   ),
                 ),
@@ -107,7 +107,7 @@ class _SplashScreenState extends State<SplashScreen>
                   child: CircularProgressIndicator(
                     strokeWidth: 2.5,
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      Colors.white.withOpacity(0.7),
+                      Colors.white.withValues(alpha: 0.7),
                     ),
                   ),
                 ),

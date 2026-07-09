@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 import '../providers/auth_provider.dart' as app_auth;
 import '../providers/task_provider.dart';
 import '../services/task_service.dart';
@@ -11,6 +12,7 @@ import 'login_screen.dart';
 import 'tasks_screen.dart';
 import 'create_task_screen.dart';
 import 'progress_screen.dart';
+import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -34,8 +36,8 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       return [
         const TasksScreen(isAdmin: false),
-        const CreateTaskScreen(),
         const ProgressScreen(isAdmin: false),
+        const ProfileScreen(),
       ];
     }
   }
@@ -63,13 +65,13 @@ class _HomeScreenState extends State<HomeScreen> {
             activeIcon: Icon(Icons.task),
             label: 'My Tasks'),
         BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle_outline),
-            activeIcon: Icon(Icons.add_circle),
-            label: 'New Task'),
-        BottomNavigationBarItem(
             icon: Icon(Icons.insights_outlined),
             activeIcon: Icon(Icons.insights),
             label: 'Progress'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Profile'),
       ];
     }
   }
@@ -129,7 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
           decoration: BoxDecoration(
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.07),
+                color: Colors.black.withValues(alpha: 0.07),
                 blurRadius: 20,
                 offset: const Offset(0, -4),
               ),
@@ -145,190 +147,286 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ── Admin Dashboard ──────────────────────────────────────────
+  // ── Admin Dashboard (StreamBuilder for live data) ─────────────
   Widget _buildAdminDashboard() {
-    return FutureBuilder<Map<String, int>>(
-      future: _getAdminStats(),
-      builder: (ctx, snap) {
-        if (snap.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        final stats = snap.data ?? {};
-        final totalInterns = stats['totalInterns'] ?? 0;
-        final totalTasks = stats['totalTasks'] ?? 0;
-        final pending = stats['pending'] ?? 0;
-        final inProgress = stats['inProgress'] ?? 0;
-        final completed = stats['completed'] ?? 0;
+    return StreamBuilder<List<Task>>(
+      stream: _taskService.getAllTasks(),
+      builder: (ctx, taskSnap) {
+        final isLoading = taskSnap.connectionState == ConnectionState.waiting;
+        final allTasks = taskSnap.data ?? [];
 
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Good to see you 👋',
-                style: Theme.of(ctx).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                "Here's your team's overview.",
-                style: TextStyle(color: Colors.grey.shade500),
-              ),
-              const SizedBox(height: 24),
+        final pending = allTasks.where((t) => t.status == 'pending').length;
+        final inProgress = allTasks.where((t) => t.status == 'in_progress').length;
+        final completed = allTasks.where((t) => t.status == 'completed').length;
+        final totalTasks = allTasks.length;
 
-              // ── Summary Cards ──────────────────────────────
-              Row(
+        return FutureBuilder<List<Map<String, dynamic>>>(
+          future: _userService.getAllUsers(),
+          builder: (ctx2, userSnap) {
+            final totalInterns = (userSnap.data ?? [])
+                .where((u) => u['role'] == 'intern')
+                .length;
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _summaryCard(
-                    'Total Interns',
-                    '$totalInterns',
-                    Icons.people_outline,
-                    AppTheme.primaryIndigo,
-                  ),
-                  const SizedBox(width: 12),
-                  _summaryCard(
-                    'Total Tasks',
-                    '$totalTasks',
-                    Icons.task_outlined,
-                    AppTheme.primaryTeal,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              Text(
-                'Task Distribution',
-                style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-              ),
-              const SizedBox(height: 12),
-
-              Row(
-                children: [
-                  _statusCard('Pending', pending, AppTheme.statusPending),
-                  const SizedBox(width: 10),
-                  _statusCard('In Progress', inProgress,
-                      AppTheme.statusInProgress),
-                  const SizedBox(width: 10),
-                  _statusCard('Completed', completed, AppTheme.statusCompleted),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // ── Recent Tasks ──────────────────────────────
-              Text(
-                'Recent Tasks',
-                style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-              ),
-              const SizedBox(height: 12),
-
-              StreamBuilder<List<Task>>(
-                stream: _taskService.getAllTasks(),
-                builder: (ctx, taskSnap) {
-                  if (!taskSnap.hasData) {
-                    return const Center(
-                        child: CircularProgressIndicator());
-                  }
-                  final tasks = taskSnap.data!.take(5).toList();
-                  if (tasks.isEmpty) {
-                    return Text('No tasks yet.',
-                        style: TextStyle(color: Colors.grey.shade400));
-                  }
-                  return Column(
-                    children: tasks.map((task) {
-                      final color = AppTheme.statusColor(task.status);
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 10),
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: Theme.of(ctx).cardTheme.color,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
-                              blurRadius: 8,
-                            )
-                          ],
+                  // ── Greeting ──────────────────────────────────
+                  Text(
+                    'Good to see you 👋',
+                    style: Theme.of(ctx).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
                         ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 6,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                color: color,
-                                borderRadius: BorderRadius.circular(3),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    task.title,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.w600),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  if (task.assignedToName != null)
-                                    Text(
-                                      task.assignedToName!,
-                                      style: TextStyle(
-                                          fontSize: 11,
-                                          color: Colors.grey.shade500),
-                                    ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: color.withOpacity(0.12),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                AppTheme.statusLabel(task.status),
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "Here's your team's live overview.",
+                    style: TextStyle(color: Colors.grey.shade500),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // ── Summary Cards ──────────────────────────────
+                  if (isLoading)
+                    _buildShimmerCards()
+                  else
+                    Row(
+                      children: [
+                        _summaryCard(
+                          'Total Interns',
+                          '$totalInterns',
+                          Icons.people_outline,
+                          AppTheme.primaryIndigo,
+                        ),
+                        const SizedBox(width: 12),
+                        _summaryCard(
+                          'Total Tasks',
+                          '$totalTasks',
+                          Icons.task_outlined,
+                          AppTheme.primaryTeal,
+                        ),
+                      ],
+                    ),
+                  const SizedBox(height: 24),
+
+                  // ── Task Distribution ──────────────────────────
+                  Text(
+                    'Task Distribution',
+                    style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  if (isLoading)
+                    _buildShimmerStatusCards()
+                  else
+                    Row(
+                      children: [
+                        _statusCard('Pending', pending, AppTheme.statusPending),
+                        const SizedBox(width: 10),
+                        _statusCard('In Progress', inProgress, AppTheme.statusInProgress),
+                        const SizedBox(width: 10),
+                        _statusCard('Completed', completed, AppTheme.statusCompleted),
+                      ],
+                    ),
+                  const SizedBox(height: 24),
+
+                  // ── Quick Actions ──────────────────────────────
+                  Text(
+                    'Quick Actions',
+                    style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+                  Builder(builder: (innerCtx) {
+                    return ElevatedButton.icon(
+                      onPressed: () => Navigator.push(
+                        innerCtx,
+                        MaterialPageRoute(builder: (_) => const CreateTaskScreen()),
+                      ),
+                      icon: const Icon(Icons.add_circle_outline, size: 18),
+                      label: const Text('Assign New Task'),
+                    );
+                  }),
+                  const SizedBox(height: 24),
+
+                  // ── Recent Tasks (live stream) ─────────────────
+                  Text(
+                    'Recent Tasks',
+                    style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  if (isLoading)
+                    _buildShimmerList()
+                  else if (allTasks.isEmpty)
+                    Text('No tasks yet.',
+                        style: TextStyle(color: Colors.grey.shade400))
+                  else
+                    Column(
+                      children: allTasks.take(5).map((task) {
+                        final color = AppTheme.statusColor(task.status);
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: Theme.of(ctx).cardTheme.color,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.04),
+                                blurRadius: 8,
+                              )
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 6,
+                                height: 36,
+                                decoration: BoxDecoration(
                                   color: color,
+                                  borderRadius: BorderRadius.circular(3),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                  );
-                },
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      task.title,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w600),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    if (task.assignedToName != null)
+                                      Text(
+                                        task.assignedToName!,
+                                        style: TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.grey.shade500),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: color.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  AppTheme.statusLabel(task.status),
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: color,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
   }
 
-  Widget _summaryCard(
-      String label, String value, IconData icon, Color color) {
+  Widget _buildShimmerCards() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade200,
+      highlightColor: Colors.grey.shade100,
+      child: Row(
+        children: [
+          Expanded(
+              child: Container(
+                  height: 80,
+                  decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16)))),
+          const SizedBox(width: 12),
+          Expanded(
+              child: Container(
+                  height: 80,
+                  decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16)))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShimmerStatusCards() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade200,
+      highlightColor: Colors.grey.shade100,
+      child: Row(
+        children: List.generate(
+          3,
+          (_) => Expanded(
+            child: Container(
+              margin: const EdgeInsets.only(right: 10),
+              height: 70,
+              decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14)),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShimmerList() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade200,
+      highlightColor: Colors.grey.shade100,
+      child: Column(
+        children: List.generate(
+          3,
+          (_) => Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            height: 64,
+            decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _summaryCard(String label, String value, IconData icon, Color color) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [color, color.withOpacity(0.7)],
+            colors: [color, color.withValues(alpha: 0.7)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -344,7 +442,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         fontWeight: FontWeight.w700)),
                 Text(label,
                     style: TextStyle(
-                        color: Colors.white.withOpacity(0.85),
+                        color: Colors.white.withValues(alpha: 0.85),
                         fontSize: 11)),
               ],
             ),
@@ -359,9 +457,9 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
+          color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withOpacity(0.2)),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Column(
           children: [
@@ -380,17 +478,41 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<Map<String, int>> _getAdminStats() async {
-    final allTasks = await _taskService.getAllTasksFuture();
-    final allUsers = await _userService.getAllUsers();
-    return {
-      'totalInterns':
-          allUsers.where((u) => u['role'] == 'intern').length,
-      'totalTasks': allTasks.length,
-      'pending': allTasks.where((t) => t.status == 'pending').length,
-      'inProgress':
-          allTasks.where((t) => t.status == 'in_progress').length,
-      'completed': allTasks.where((t) => t.status == 'completed').length,
-    };
+  Widget _buildCreateTaskPlaceholder() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.add_circle_outline, size: 80, color: Colors.blue),
+          const SizedBox(height: 20),
+          const Text(
+            'Create a new task',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Tap the button below to get started',
+            style: TextStyle(color: Colors.grey),
+          ),
+          const SizedBox(height: 30),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CreateTaskScreen(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.add),
+            label: const Text('New Task'),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 14),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
+

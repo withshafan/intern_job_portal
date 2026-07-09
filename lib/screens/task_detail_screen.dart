@@ -88,7 +88,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 12, vertical: 6),
                                   decoration: BoxDecoration(
-                                    color: statusColor.withOpacity(0.12),
+                                    color: statusColor.withValues(alpha: 0.12),
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: Text(
@@ -225,7 +225,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   Theme.of(context).scaffoldBackgroundColor,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
+                  color: Colors.black.withValues(alpha: 0.06),
                   blurRadius: 10,
                   offset: const Offset(0, -2),
                 ),
@@ -301,7 +301,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           if (!isMe) ...[
             CircleAvatar(
               radius: 16,
-              backgroundColor: AppTheme.primaryIndigo.withOpacity(0.1),
+              backgroundColor: AppTheme.primaryIndigo.withValues(alpha: 0.1),
               child: Text(
                 comment.authorName[0].toUpperCase(),
                 style: const TextStyle(
