@@ -96,7 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Sign in to your Intern Job account',
+                      'Sign in to your Elevate Hub account',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.white.withValues(alpha: 0.85),

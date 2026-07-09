@@ -100,7 +100,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Join Intern Job and start managing tasks',
+                      'Join Elevate Hub and start managing tasks',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.white.withValues(alpha: 0.85),

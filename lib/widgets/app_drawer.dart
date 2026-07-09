@@ -232,7 +232,7 @@ class AppDrawer extends StatelessWidget {
                         size: 14, color: Colors.grey.shade400),
                     const SizedBox(width: 6),
                     Text(
-                      'Intern Job v1.0',
+                      'Elevate Hub v1.0',
                       style: TextStyle(
                         fontSize: 11,
                         color: Colors.grey.shade400,

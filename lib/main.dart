@@ -45,7 +45,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeMode = context.watch<ThemeModeNotifier>().mode;
     return MaterialApp(
-      title: 'Intern Job',
+      title: 'Elevate Hub',
       navigatorKey: navigatorKey,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,

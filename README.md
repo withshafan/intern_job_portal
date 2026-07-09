@@ -1,6 +1,6 @@
 <div align="center">
-  <img src="assets/icon/app_icon.png" width="150" height="150" alt="Intern Job Logo" style="border-radius: 30px; box-shadow: 0px 4px 12px rgba(0,0,0,0.2);"/>
-  <h1>💼 Intern Job (formerly InternHub)</h1>
+  <img src="assets/icon/app_icon.png" width="150" height="150" alt="Elevate Hub Logo" style="border-radius: 30px; box-shadow: 0px 4px 12px rgba(0,0,0,0.2);"/>
+  <h1>💼 Elevate Hub</h1>
   <p>A modern, premium, and scalable Flutter application for streamlined intern task management, progress tracking, and seamless collaboration.</p>
 
   [![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev/)
@@ -13,7 +13,7 @@
 
 ## 📖 Overview
 
-**Intern Job** is a role-based task management system specifically tailored to bridge the gap between administrators (mentors) and interns. Built with a focus on **UI/UX excellence**, it features a beautiful custom-designed theme, smooth micro-interactions, real-time data sync, and interactive analytics powered by advanced charting libraries.
+**Elevate Hub** is a role-based task management system specifically tailored to bridge the gap between administrators (mentors) and interns. Built with a focus on **UI/UX excellence**, it features a beautiful custom-designed theme, smooth micro-interactions, real-time data sync, and interactive analytics powered by advanced charting libraries.
 
 ---
 
@@ -37,7 +37,7 @@
 - **Custom Branding:** Polished "Made by withshafan" graphics elegantly integrated into the application interface.
 
 ### 📊 Data Visualization with `fl_chart`
-Instead of static representations, **Intern Job** heavily relies on dynamic data visualization using **`fl_chart`** to provide real-time insights:
+Instead of static representations, **Elevate Hub** heavily relies on dynamic data visualization using **`fl_chart`** to provide real-time insights:
 - **Dynamic Pie Charts:** Visualize task completion rates and intern distributions with interactive, animated pie charts.
 - **Progress Tracking:** Monitor intern performance over time through intuitive graphical representations.
 - **Real-time Updates:** Charts automatically re-render with smooth animations whenever backend data in Firestore is updated, providing a truly reactive analytics dashboard.

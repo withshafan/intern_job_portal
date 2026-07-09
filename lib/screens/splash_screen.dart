@@ -83,7 +83,7 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
                 const SizedBox(height: 28),
                 const Text(
-                  'Intern Job',
+                  'Elevate Hub',
                   style: TextStyle(
                     fontSize: 34,
                     fontWeight: FontWeight.w700,
