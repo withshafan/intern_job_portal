@@ -38,12 +38,13 @@ class AuthProvider extends ChangeNotifier {
     _error = null;
     try {
       await _authService.signIn(email: email, password: password);
+      _currentUser = await _userService.getCurrentUserData();
+      _status = AuthStatus.authenticated;
     } on Exception catch (e) {
       _error = _friendlyError(e.toString());
-      _setLoading(false);
-      notifyListeners();
     }
     _setLoading(false);
+    notifyListeners();
   }
 
   Future<void> signup({
@@ -61,12 +62,13 @@ class AuthProvider extends ChangeNotifier {
         name: name,
         role: role,
       );
+      _currentUser = await _userService.getCurrentUserData();
+      _status = AuthStatus.authenticated;
     } on Exception catch (e) {
       _error = _friendlyError(e.toString());
-      _setLoading(false);
-      notifyListeners();
     }
     _setLoading(false);
+    notifyListeners();
   }
 
   Future<void> logout() async {
